@@ -5,12 +5,30 @@ import {
   Timestamp, updateDoc, where, writeBatch, type DocumentSnapshot,
 } from 'firebase/firestore'
 import { auth, db } from './firebase'
-import { resizeImage } from './utils'
+import { displayName, resizeImage } from './utils'
 
 export type Status = 'pending' | 'arrived' | 'delivered'
 export type Kind = 'papers' | 'parts'
-export interface HistoryEntry { action: 'created' | 'edited' | Status; by: string; at: Timestamp }
-export interface Fields { clientName: string; clientPhone: string; type: Kind; note: string }
+export const DOCS = [
+  'COC', 'CO', 'Environmental list', 'Blue card', 'Billing list', 'COC Trans', 'CI', 'Green book', 'Technical report',
+]
+export interface HistoryEntry {
+  action: 'created' | 'edited' | 'paid' | Status
+  by: string // email
+  name?: string // name at the time; missing on entries written before profiles existed
+  at: Timestamp
+}
+export interface Fields {
+  type: Kind
+  clientName: string
+  clientPhone: string
+  address: string
+  description: string // parts only
+  docs: string[] // papers only
+  fullPrice: number
+  deposit: number
+  note: string
+}
 export interface Shipment extends Fields {
   id: string
   status: Status
@@ -21,17 +39,30 @@ export interface Shipment extends Fields {
 }
 export interface Photo { id: string; data: string } // id '' = not saved yet
 
+export const remaining = (s: Fields) => Math.max(0, s.fullPrice - s.deposit)
+export const myName = () => auth.currentUser!.displayName || displayName(auth.currentUser!.email!)
+
 const shipments = collection(db, 'shipments')
 const photosOf = (id: string) => collection(db, 'shipments', id, 'photos')
 
 const entry = (action: HistoryEntry['action']): HistoryEntry =>
-  ({ action, by: auth.currentUser!.email!, at: Timestamp.now() })
+  ({ action, by: auth.currentUser!.email!, name: myName(), at: Timestamp.now() })
 
-const clean = (f: Fields): Fields =>
-  ({ ...f, clientName: f.clientName.trim(), clientPhone: f.clientPhone.trim(), note: f.note.trim() })
+const clean = (f: Fields): Fields => ({
+  ...f,
+  clientName: f.clientName.trim(),
+  clientPhone: f.clientPhone.trim(),
+  address: f.address.trim(),
+  description: f.type === 'parts' ? f.description.trim() : '',
+  docs: f.type === 'papers' ? f.docs : [],
+  note: f.note.trim(),
+})
 
-const toShipment = (d: DocumentSnapshot) =>
-  ({ id: d.id, ...d.data({ serverTimestamps: 'estimate' }) }) as Shipment
+// Defaults cover shipments saved before these fields existed.
+const toShipment = (d: DocumentSnapshot) => ({
+  address: '', description: '', docs: [], fullPrice: 0, deposit: 0, note: '',
+  id: d.id, ...(d.data({ serverTimestamps: 'estimate' }) as Partial<Shipment>),
+}) as Shipment
 
 export function watchShipments(onData: (s: Shipment[]) => void, onError: (e: Error) => void) {
   return onSnapshot(query(shipments, orderBy('createdAt', 'desc')), snap => onData(snap.docs.map(toShipment)), onError)
@@ -86,6 +117,10 @@ export function setStatus(id: string, status: Status) {
   })
 }
 
+export function markPaid(s: Shipment) {
+  return updateDoc(doc(shipments, s.id), { deposit: s.fullPrice, history: arrayUnion(entry('paid')) })
+}
+
 export async function deleteShipment(id: string) {
   const batch = writeBatch(db)
   ;(await getDocs(photosOf(id))).forEach(p => batch.delete(p.ref))
@@ -94,11 +129,12 @@ export async function deleteShipment(id: string) {
 }
 
 // Client-side cleanup (no Cloud Functions): runs when the list opens.
+// Only fully paid shipments go, so an unpaid balance is never lost.
 export async function cleanupDelivered(days = 14) {
   const cutoff = Date.now() - days * 86400000
   const snap = await getDocs(query(shipments, where('status', '==', 'delivered')))
   for (const d of snap.docs) {
-    const at = d.get('deliveredAt') as Timestamp | null
-    if (at && at.toMillis() < cutoff) await deleteShipment(d.id)
+    const s = toShipment(d)
+    if (s.deliveredAt && s.deliveredAt.toMillis() < cutoff && remaining(s) === 0) await deleteShipment(d.id)
   }
 }

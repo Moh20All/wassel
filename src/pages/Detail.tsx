@@ -1,8 +1,11 @@
 import { useEffect, useState } from 'react'
 import { Navigate, useNavigate, useParams } from 'react-router-dom'
-import { deleteShipment, setStatus, watchPhotos, watchShipment, type HistoryEntry, type Photo, type Shipment, type Status } from '../shipments'
-import { ActionBar, Button, ContactActions, FormGroup, NavBar, StatusBadge, TypeTag } from '../ui'
-import { displayName, formatDateTime } from '../utils'
+import {
+  deleteShipment, DOCS, markPaid, remaining, setStatus, watchPhotos, watchShipment,
+  type HistoryEntry, type Photo, type Shipment, type Status,
+} from '../shipments'
+import { ActionBar, Button, ContactActions, FormGroup, Icon, NavBar, StatusBadge, TypeTag } from '../ui'
+import { displayName, formatDA, formatDateTime } from '../utils'
 
 const NEXT: Record<Status, [Status, string] | null> = {
   pending: ['arrived', 'Mark arrived'],
@@ -15,7 +18,17 @@ const BACK: Record<Status, [Status, string] | null> = {
   delivered: ['arrived', 'Back to arrived'],
 }
 const ACTION: Record<HistoryEntry['action'], string> = {
-  created: 'Logged', edited: 'Edited', pending: 'Moved to pending', arrived: 'Marked arrived', delivered: 'Marked delivered',
+  created: 'Logged', edited: 'Edited', paid: 'Marked fully paid',
+  pending: 'Moved to pending', arrived: 'Marked arrived', delivered: 'Marked delivered',
+}
+
+function Row({ label, value, strong }: { label: string; value: string; strong?: boolean }) {
+  return (
+    <div className="ib-field row">
+      <span className="body">{label}</span>
+      <span className={strong ? 'headline' : 'body muted'}>{value}</span>
+    </div>
+  )
 }
 
 export default function Detail() {
@@ -51,6 +64,7 @@ export default function Detail() {
 
   const next = NEXT[s.status]
   const back = BACK[s.status]
+  const left = remaining(s)
 
   return (
     <div className="page">
@@ -68,14 +82,50 @@ export default function Detail() {
         )}
         <section>
           <h2 className="title-2 heading">{s.clientName}</h2>
-          <div className="ib-card-meta"><StatusBadge status={s.status} /><TypeTag type={s.type} /></div>
+          <div className="ib-card-meta">
+            <StatusBadge status={s.status} /><TypeTag type={s.type} />
+            {s.fullPrice > 0 && <span className={'ib-badge ' + (left ? 'ib-badge-pending' : 'ib-badge-delivered')}>{left ? 'Unpaid' : 'Paid'}</span>}
+          </div>
         </section>
         <ContactActions phone={s.clientPhone} />
-        {s.note && <FormGroup label="Note"><div className="ib-field body note">{s.note}</div></FormGroup>}
+        {s.address && <FormGroup label="Address"><div className="ib-field body note">{s.address}</div></FormGroup>}
+
+        {s.type === 'parts' && s.description && (
+          <FormGroup label="Car part"><div className="ib-field body note">{s.description}</div></FormGroup>
+        )}
+        {s.type === 'papers' && (
+          <FormGroup label={`Documents · ${s.docs.length}/${DOCS.length}`}>
+            {DOCS.map(d => (
+              <div className={'ib-field check-row' + (s.docs.includes(d) ? '' : ' missing')} key={d}>
+                <Icon name={s.docs.includes(d) ? 'check' : 'dash'} />
+                <span className="body">{d}</span>
+              </div>
+            ))}
+          </FormGroup>
+        )}
+
+        {s.fullPrice > 0 && (
+          <section>
+            <FormGroup label="Payment">
+              <Row label="Full price" value={formatDA(s.fullPrice)} />
+              <Row label="Deposit" value={formatDA(s.deposit)} />
+              <Row label="Remaining" value={left ? formatDA(left) : 'Paid'} strong />
+            </FormGroup>
+            {left > 0 && (
+              <div className="pay-hint">
+                <span />
+                <Button variant="plain" disabled={busy} onClick={() => run(() => markPaid(s))}>Mark fully paid</Button>
+              </div>
+            )}
+          </section>
+        )}
+
+        {s.note && <FormGroup label="Remark"><div className="ib-field body note">{s.note}</div></FormGroup>}
+
         <FormGroup label="History">
           {[...s.history].reverse().map((h, i) => (
             <div className="ib-field" key={i}>
-              <span className="body">{ACTION[h.action]} by {displayName(h.by)}</span>
+              <span className="body">{ACTION[h.action]} by {h.name ?? displayName(h.by)}</span>
               <span className="ib-field-label">{formatDateTime(h.at.toDate())}</span>
             </div>
           ))}

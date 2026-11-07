@@ -1,12 +1,23 @@
-// New shipment (/new) and edit (/s/:id/edit).
+// New shipment (/new) and edit (/s/:id/edit). Parts and Papers share the form; the middle section switches.
 import { useEffect, useState, type FormEvent } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { createShipment, getPhotos, getShipment, updateShipment, type Fields, type Photo } from '../shipments'
+import { createShipment, DOCS, getPhotos, getShipment, updateShipment, type Fields, type Photo } from '../shipments'
 import { ActionBar, Button, FormGroup, Icon, NavBar, PhotoPicker, SegmentedControl, TextField } from '../ui'
-import { resizeImage } from '../utils'
+import { formatDA, parseAmount, resizeImage } from '../utils'
 
-const EMPTY: Fields = { clientName: '', clientPhone: '', type: 'papers', note: '' }
+const EMPTY: Fields = {
+  type: 'parts', clientName: '', clientPhone: '', address: '', description: '', docs: [], fullPrice: 0, deposit: 0, note: '',
+}
 const MAX_PHOTOS = 3
+
+function validate(f: Fields) {
+  if (!f.clientName.trim() || !f.clientPhone.trim()) return 'Add the client name and phone number.'
+  if (!f.address.trim()) return 'Add the client address.'
+  if (f.type === 'parts' && !f.description.trim()) return 'Describe the car part.'
+  if (!f.fullPrice) return 'Add the full price.'
+  if (f.deposit > f.fullPrice) return 'The deposit cannot be more than the full price.'
+  return ''
+}
 
 export default function ShipmentForm() {
   const { id } = useParams()
@@ -18,13 +29,16 @@ export default function ShipmentForm() {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const [toast, setToast] = useState(false)
-  const set = (k: keyof Fields) => (v: string) => setFields(f => ({ ...f, [k]: v }))
+  const set = <K extends keyof Fields>(k: K) => (v: Fields[K]) => setFields(f => ({ ...f, [k]: v }))
+  const amount = (k: 'fullPrice' | 'deposit') => (v: string) => set(k)(parseAmount(v))
+  const toggleDoc = (d: string) => set('docs')(fields.docs.includes(d) ? fields.docs.filter(x => x !== d) : [...fields.docs, d])
 
   useEffect(() => {
     if (!id) return
     Promise.all([getShipment(id), getPhotos(id)]).then(([s, ph]) => {
       if (!s) return nav('/', { replace: true })
-      setFields({ clientName: s.clientName, clientPhone: s.clientPhone, type: s.type, note: s.note })
+      const { type, clientName, clientPhone, address, description, docs, fullPrice, deposit, note } = s
+      setFields({ type, clientName, clientPhone, address, description, docs, fullPrice, deposit, note })
       setPhotos(ph)
       setBefore(ph)
       setLoaded(true)
@@ -42,8 +56,8 @@ export default function ShipmentForm() {
 
   async function submit(e: FormEvent) {
     e.preventDefault()
-    if (!fields.clientName.trim() || !fields.clientPhone.trim()) return setError('Add the client name and phone number.')
-    if (!photos.length) return setError('Add at least one photo.')
+    const problem = validate(fields)
+    if (problem) return setError(problem)
     setBusy(true)
     setError('')
     try {
@@ -52,7 +66,7 @@ export default function ShipmentForm() {
         nav(`/s/${id}`, { replace: true })
       } else {
         await createShipment(fields, photos)
-        setFields(EMPTY)
+        setFields({ ...EMPTY, type: fields.type })
         setPhotos([])
         setToast(true)
         setTimeout(() => setToast(false), 2500)
@@ -67,28 +81,62 @@ export default function ShipmentForm() {
 
   if (!loaded) return error ? <p className="ib-help ib-help-error">{error}</p> : null
 
+  const left = fields.fullPrice - fields.deposit
+
   return (
     <form className="page" onSubmit={submit}>
       <NavBar title={id ? 'Edit shipment' : 'New shipment'} large={!id} onBack={() => nav(id ? `/s/${id}` : '/')} />
       <main className="content">
+        <SegmentedControl label="Type" value={fields.type} onChange={set('type')}
+          options={[{ value: 'parts', label: 'Parts' }, { value: 'papers', label: 'Papers' }]} />
+
         <FormGroup label="Client">
           <TextField label="Client name" value={fields.clientName} onChange={set('clientName')} />
           <TextField label="Phone number" type="tel" placeholder="0555 12 34 56" value={fields.clientPhone} onChange={set('clientPhone')} />
+          <TextField label="Address" autoComplete="street-address" value={fields.address} onChange={set('address')} />
         </FormGroup>
-        <FormGroup label="Type">
-          <div className="ib-field">
-            <SegmentedControl label="Type" value={fields.type} onChange={set('type')}
-              options={[{ value: 'papers', label: 'Papers' }, { value: 'parts', label: 'Parts' }]} />
-          </div>
-        </FormGroup>
+
+        {fields.type === 'parts' ? (
+          <FormGroup label="Car part">
+            <TextField label="Description" multiline placeholder="e.g. Front bumper, Golf 8, black"
+              value={fields.description} onChange={set('description')} />
+          </FormGroup>
+        ) : (
+          <FormGroup label={`Documents · ${fields.docs.length}/${DOCS.length}`}>
+            {DOCS.map(d => (
+              <label className="ib-field check-row" key={d}>
+                <input type="checkbox" checked={fields.docs.includes(d)} onChange={() => toggleDoc(d)} />
+                <span className="body">{d}</span>
+              </label>
+            ))}
+          </FormGroup>
+        )}
+
         <section>
-          <h3 className="ib-group-label">Photos</h3>
+          <FormGroup label="Payment">
+            <TextField label="Full price (DA)" inputMode="numeric" placeholder="0"
+              value={fields.fullPrice ? fields.fullPrice.toLocaleString('fr-FR') : ''} onChange={amount('fullPrice')} />
+            <TextField label="Deposit (DA)" inputMode="numeric" placeholder="0"
+              value={fields.deposit ? fields.deposit.toLocaleString('fr-FR') : ''} onChange={amount('deposit')} />
+          </FormGroup>
+          {fields.fullPrice > 0 && (
+            <div className="pay-hint">
+              <span className="ib-help">{left > 0 ? `${formatDA(left)} left to pay` : left === 0 ? 'Paid in full' : ''}</span>
+              {left > 0 && <Button variant="plain" onClick={() => set('deposit')(fields.fullPrice)}>Paid in full</Button>}
+            </div>
+          )}
+        </section>
+
+        <FormGroup label="Remark">
+          <TextField label="Remark" optional multiline value={fields.note} onChange={set('note')} />
+        </FormGroup>
+
+        <section>
+          <h3 className="ib-group-label">Photos (optional)</h3>
           <PhotoPicker photos={photos.map(p => p.data)} max={MAX_PHOTOS} onAdd={addPhotos}
             onRemove={i => setPhotos(p => p.filter((_, j) => j !== i))} />
         </section>
-        <FormGroup label="Note">
-          <TextField label="Note" optional multiline value={fields.note} onChange={set('note')} />
-        </FormGroup>
+
         {error && <p className="ib-help ib-help-error" role="alert">{error}</p>}
       </main>
       <ActionBar><Button type="submit" block loading={busy}>{id ? 'Save changes' : 'Submit shipment'}</Button></ActionBar>

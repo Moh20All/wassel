@@ -6,6 +6,7 @@ import Login from './pages/Login'
 import List from './pages/List'
 import ShipmentForm from './pages/ShipmentForm'
 import Detail from './pages/Detail'
+import Profile from './pages/Profile'
 
 export default function App() {
   const [user, setUser] = useState<User | null>()
@@ -20,6 +21,7 @@ export default function App() {
         <Route path="/new" element={<ShipmentForm />} />
         <Route path="/s/:id" element={<Detail />} />
         <Route path="/s/:id/edit" element={<ShipmentForm />} />
+        <Route path="/profile" element={<Profile />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>

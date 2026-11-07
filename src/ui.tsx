@@ -13,6 +13,8 @@ const PATHS = {
   box: 'M4 7l8-4 8 4v10l-8 4-8-4z M4 7l8 4 8-4 M12 11v10',
   x: 'M7 7l10 10M17 7L7 17',
   check: 'M5 12.5l4.5 4.5L19 7',
+  user: 'M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8z M4 20a8 8 0 0 1 16 0',
+  dash: 'M7 12h10',
 }
 
 export function Icon({ name, size = 20, weight = 2 }: { name: keyof typeof PATHS; size?: number; weight?: number }) {
@@ -58,7 +60,7 @@ export function Button(p: {
 
 export function TextField(p: {
   label: string; value: string; onChange: (v: string) => void; type?: string; autoComplete?: string
-  placeholder?: string; multiline?: boolean; optional?: boolean
+  inputMode?: 'numeric' | 'tel' | 'email' | 'text'; placeholder?: string; multiline?: boolean; optional?: boolean
 }) {
   const id = 'f-' + p.label.replace(/\W+/g, '-').toLowerCase()
   const change = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => p.onChange(e.target.value)
@@ -67,7 +69,7 @@ export function TextField(p: {
       <label className="ib-field-label" htmlFor={id}>{p.label}{p.optional && ' (optional)'}</label>
       {p.multiline
         ? <textarea id={id} rows={3} placeholder={p.placeholder} value={p.value} onChange={change} />
-        : <input id={id} type={p.type ?? 'text'} autoComplete={p.autoComplete} placeholder={p.placeholder}
+        : <input id={id} type={p.type ?? 'text'} autoComplete={p.autoComplete} inputMode={p.inputMode} placeholder={p.placeholder}
             value={p.value} onChange={change} />}
     </div>
   )
@@ -110,7 +112,7 @@ export function TypeTag({ type }: { type: Kind }) {
 }
 
 export function ShipmentCard(p: {
-  clientName: string; type: Kind; status: Status; time: string; photo?: string | null; onClick: () => void
+  clientName: string; type: Kind; status: Status; time: string; sub?: string; photo?: string | null; onClick: () => void
 }) {
   return (
     <button type="button" className="ib-card" onClick={p.onClick}>
@@ -122,6 +124,7 @@ export function ShipmentCard(p: {
           <span className="ib-card-name">{p.clientName}</span>
           <span className="ib-card-time">{p.time}</span>
         </span>
+        {p.sub && <span className="card-sub">{p.sub}</span>}
         <span className="ib-card-meta"><StatusBadge status={p.status} /><TypeTag type={p.type} /></span>
       </span>
       <span className="ib-chev"><Icon name="chevronRight" size={18} weight={2.5} /></span>

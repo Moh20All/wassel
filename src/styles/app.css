@@ -8,7 +8,31 @@ html { background: var(--bg-grouped); }
 .ib-actionbar { position: sticky; bottom: 0; }
 
 .list { display: flex; flex-direction: column; gap: var(--space-2); }
-.empty { margin: 0; padding: var(--space-8) var(--space-4); text-align: center; color: var(--label-secondary); }
+.empty { display: flex; flex-direction: column; align-items: center; gap: var(--space-3);
+  padding: var(--space-8) var(--space-4); text-align: center; color: var(--label-secondary); }
+.empty p { margin: 0; }
+.card-sub { font: 400 13px/18px var(--font-sans); color: var(--label-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.stats { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-2); }
+.stats-inline { grid-template-columns: repeat(3, 1fr); padding: var(--space-3) var(--space-4); }
+.stats-inline .stat { padding: 0; }
+.stat { display: flex; flex-direction: column; gap: 2px; padding: var(--space-3) var(--space-4); border-radius: var(--radius-md);
+  background: var(--surface); min-width: 0; }
+.stat-value { font: 700 22px/28px var(--font-sans); letter-spacing: -0.3px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.stat-label { color: var(--label-secondary); }
+.stat-pending .stat-value { color: var(--pending-ink); }
+.stat-arrived .stat-value { color: var(--arrived-ink); }
+.stat-delivered .stat-value { color: var(--delivered-ink); }
+
+.check-row { flex-direction: row; align-items: center; gap: var(--space-3); cursor: pointer; }
+.check-row input { width: 22px; height: 22px; margin: 0; accent-color: var(--accent); }
+.check-row svg { color: var(--delivered); flex: none; }
+.check-row.missing { color: var(--label-tertiary); cursor: default; }
+.check-row.missing svg { color: var(--label-tertiary); }
+.row { flex-direction: row; align-items: center; justify-content: space-between; }
+.muted { color: var(--label-secondary); }
+.pay-hint { display: flex; align-items: center; justify-content: space-between; min-height: var(--tap-min); }
+.pay-hint .ib-help { margin-top: 0; }
 
 .logo { display: block; width: 160px; margin: var(--space-8) auto var(--space-4); }
 .logo-dark, [data-theme="dark"] .logo-light { display: none; }

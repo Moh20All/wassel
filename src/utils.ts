@@ -1,11 +1,17 @@
-// Names shown in history. Unlisted emails show the part before "@".
-const NAMES: Record<string, string> = {
-  // 'moha@wassel.app': 'Moha',
-}
-
+// Fallback name when a user hasn't set one on the Profile page: the part before "@".
 export function displayName(email: string) {
   const local = email.split('@')[0]
-  return NAMES[email] ?? local.charAt(0).toUpperCase() + local.slice(1)
+  return local.charAt(0).toUpperCase() + local.slice(1)
+}
+
+// 120000 -> "120 000 DA"
+export function formatDA(n: number) {
+  return n.toLocaleString('fr-FR') + ' DA'
+}
+
+// "120 000" or "120000" typed in a field -> 120000
+export function parseAmount(s: string) {
+  return Number(s.replace(/\D/g, '')) || 0
 }
 
 export function toWhatsAppUrl(phone: string) {
@@ -25,6 +31,15 @@ export function timeAgo(date: Date, now = new Date()) {
   yesterday.setDate(now.getDate() - 1)
   if (date.toDateString() === yesterday.toDateString()) return 'Yesterday'
   return date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
+}
+
+// List section headers: "Today", "Yesterday", "Tuesday 3 Nov"
+export function dayLabel(date: Date, now = new Date()) {
+  const yesterday = new Date(now)
+  yesterday.setDate(now.getDate() - 1)
+  if (date.toDateString() === now.toDateString()) return 'Today'
+  if (date.toDateString() === yesterday.toDateString()) return 'Yesterday'
+  return date.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'short' })
 }
 
 // "3 Nov 2026, 14:20"
