@@ -1,0 +1,97 @@
+/* Wassel components — reads tokens.css custom properties only */
+body { margin: 0; background: var(--bg-grouped); color: var(--label); font-family: var(--font-sans); -webkit-font-smoothing: antialiased; }
+.ib-stack { display: flex; flex-direction: column; gap: var(--space-2); padding: var(--space-4); }
+.ib-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); padding: var(--space-4); }
+
+/* Button */
+.ib-btn { appearance: none; border: 0; display: inline-flex; align-items: center; justify-content: center; gap: var(--space-2);
+  min-height: var(--button-h); padding: 0 var(--space-5); border-radius: var(--radius-md);
+  font: 600 17px/22px var(--font-sans); letter-spacing: -0.4px; cursor: pointer; white-space: nowrap; -webkit-tap-highlight-color: transparent; }
+.ib-btn:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.ib-btn[disabled] { opacity: .4; cursor: default; }
+.ib-btn-block { display: flex; width: 100%; }
+.ib-btn-primary { background: var(--accent); color: var(--on-accent); }
+.ib-btn-primary:active:not([disabled]) { background: var(--accent-pressed); }
+.ib-btn-secondary { background: var(--accent-soft); color: var(--accent-ink); }
+.ib-btn-plain { background: transparent; color: var(--accent-ink); min-height: var(--tap-min); padding: 0 var(--space-2); }
+.ib-btn-destructive { background: var(--surface); color: var(--danger-ink); }
+.ib-spinner { width: 18px; height: 18px; border-radius: 50%; border: 2px solid currentColor; border-right-color: transparent; animation: ib-spin .8s linear infinite; }
+@keyframes ib-spin { to { transform: rotate(360deg); } }
+
+/* Form group + field */
+.ib-group-label { margin: 0 0 6px var(--space-4); font: 400 13px/18px var(--font-sans); text-transform: uppercase; color: var(--label-secondary); }
+.ib-group { background: var(--surface); border-radius: var(--radius-md); overflow: hidden; }
+.ib-field { display: flex; flex-direction: column; gap: 2px; padding: 10px var(--space-4); min-height: var(--tap-min); box-sizing: border-box; position: relative; }
+.ib-field + .ib-field::before { content: ""; position: absolute; top: 0; left: var(--space-4); right: 0; height: 0.5px; background: var(--separator); }
+.ib-field-label { font: 400 13px/18px var(--font-sans); color: var(--label-secondary); }
+.ib-field input, .ib-field textarea { border: 0; outline: 0; background: transparent; padding: 0; margin: 0; width: 100%;
+  font: 400 17px/22px var(--font-sans); letter-spacing: -0.4px; color: var(--label); resize: none; }
+.ib-field input::placeholder, .ib-field textarea::placeholder { color: var(--label-tertiary); }
+.ib-field-error .ib-field-label { color: var(--danger-ink); }
+.ib-help { margin: 6px var(--space-4) 0; font: 400 13px/18px var(--font-sans); color: var(--label-secondary); }
+.ib-help-error { color: var(--danger-ink); }
+
+/* Segmented control */
+.ib-seg { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; padding: 2px; border-radius: 9px; background: var(--surface-2); }
+.ib-seg button { appearance: none; border: 0; background: transparent; min-height: 32px; border-radius: 7px;
+  font: 500 13px/18px var(--font-sans); color: var(--label); cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px; }
+.ib-seg button[aria-pressed="true"] { background: var(--surface-raised); box-shadow: var(--shadow-segment); font-weight: 600; }
+.ib-seg-count { font-weight: 400; color: var(--label-secondary); }
+
+/* Status badge + type tag */
+.ib-badge { display: inline-flex; align-items: center; gap: var(--space-1); height: 22px; padding: 0 8px; border-radius: var(--radius-full);
+  font: 600 12px/16px var(--font-sans); white-space: nowrap; }
+.ib-badge::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.ib-badge-pending { background: var(--pending-soft); color: var(--pending-ink); }
+.ib-badge-pending::before { background: var(--pending); }
+.ib-badge-arrived { background: var(--arrived-soft); color: var(--arrived-ink); }
+.ib-badge-arrived::before { background: var(--arrived); }
+.ib-badge-delivered { background: var(--delivered-soft); color: var(--delivered-ink); }
+.ib-badge-delivered::before { background: var(--delivered); }
+.ib-tag { display: inline-flex; align-items: center; gap: var(--space-1); height: 22px; padding: 0 8px; border-radius: var(--radius-full);
+  background: var(--surface-2); color: var(--label-secondary); font: 600 12px/16px var(--font-sans); }
+.ib-tag svg { width: 12px; height: 12px; }
+
+/* Shipment card */
+.ib-card { display: flex; align-items: center; gap: var(--space-3); width: 100%; text-align: left; appearance: none; border: 0;
+  background: var(--surface); border-radius: var(--radius-md); padding: var(--space-3) var(--space-4) var(--space-3) var(--space-3);
+  font-family: var(--font-sans); color: var(--label); cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.ib-card:active { background: var(--surface-2); }
+.ib-card:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.ib-thumb { flex: none; width: var(--thumb); height: var(--thumb); border-radius: var(--radius-sm); background: var(--surface-2); object-fit: cover;
+  display: flex; align-items: center; justify-content: center; color: var(--label-tertiary); }
+.ib-card-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+.ib-card-top { display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-2); }
+.ib-card-name { font: 600 17px/22px var(--font-sans); letter-spacing: -0.4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ib-card-time { flex: none; font: 400 13px/18px var(--font-sans); color: var(--label-secondary); }
+.ib-card-meta { display: flex; gap: var(--space-2); align-items: center; }
+.ib-chev { flex: none; color: var(--label-tertiary); }
+
+/* Photo picker */
+.ib-photos { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-2); }
+.ib-slot { position: relative; aspect-ratio: 1; border-radius: var(--radius-sm); background: var(--surface); overflow: visible; }
+.ib-slot img { width: 100%; height: 100%; object-fit: cover; border-radius: var(--radius-sm); display: block; }
+.ib-slot-add { appearance: none; border: 1.5px dashed var(--separator); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
+  color: var(--accent-ink); font: 500 13px/18px var(--font-sans); cursor: pointer; width: 100%; }
+.ib-slot-remove { position: absolute; top: -6px; right: -6px; width: 24px; height: 24px; border-radius: var(--radius-full); border: 2px solid var(--surface);
+  background: var(--danger); color: var(--on-accent); display: flex; align-items: center; justify-content: center; padding: 0; cursor: pointer; }
+
+/* Contact actions */
+.ib-contact { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-2); }
+.ib-contact a { display: flex; align-items: center; justify-content: center; gap: var(--space-2); min-height: var(--button-h); border-radius: var(--radius-md);
+  font: 600 17px/22px var(--font-sans); letter-spacing: -0.4px; text-decoration: none; }
+.ib-contact-call { background: var(--accent-soft); color: var(--accent-ink); }
+.ib-contact-wa { background: var(--delivered-soft); color: var(--delivered-ink); }
+.ib-phone { display: block; margin-bottom: var(--space-2); font: 400 17px/22px var(--font-sans); color: var(--accent-ink); text-decoration: none; }
+
+/* Nav bar */
+.ib-nav { background: var(--bg-grouped); padding: 0 var(--space-4); }
+.ib-nav-bar { display: flex; align-items: center; justify-content: space-between; min-height: var(--tap-min); }
+.ib-nav-title { font: 600 17px/22px var(--font-sans); letter-spacing: -0.4px; }
+.ib-nav-large { margin: 2px 0 var(--space-2); font: 700 34px/41px var(--font-sans); letter-spacing: 0.4px; }
+.ib-nav-slot { min-width: 72px; display: flex; }
+.ib-nav-slot:last-child { justify-content: flex-end; }
+.ib-back { display: inline-flex; align-items: center; gap: 2px; margin-left: -8px; }
+
+/* Bottom action bar */
+.ib-actionbar { background: var(--surface); box-shadow: var(--shadow-bar); padding: var(--space-3) var(--space-4) calc(var(--space-3) + env(safe-area-inset-bottom)); display: flex; flex-direction: column; gap: var(--space-2); }

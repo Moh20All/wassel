@@ -1,0 +1,85 @@
+/* Wassel — generated from tokens.json */
+:root, [data-theme="light"] {
+  --bg-grouped: #f2f2f7;
+  --surface: #ffffff;
+  --surface-2: #f2f2f7;
+  --surface-raised: #ffffff;
+  --separator: #c6c6c8;
+  --label: #000000;
+  --label-secondary: #6c6c70;
+  --label-tertiary: #8e8e93;
+  --accent: #007aff;
+  --accent-pressed: #0062cc;
+  --accent-ink: #0066d6;
+  --accent-soft: #e5f1ff;
+  --on-accent: #ffffff;
+  --pending: #ff9500;
+  --pending-soft: #fff2e0;
+  --pending-ink: #b34700;
+  --arrived: var(--accent);
+  --arrived-soft: var(--accent-soft);
+  --arrived-ink: #0058b8;
+  --delivered: #34c759;
+  --delivered-soft: #e3f6e8;
+  --delivered-ink: #1a7431;
+  --danger: #ff3b30;
+  --danger-ink: #d70015;
+  --scrim: rgba(0, 0, 0, 0.4);
+  --shadow-segment: 0 3px 8px rgba(0, 0, 0, 0.12), 0 3px 1px rgba(0, 0, 0, 0.04);
+  --shadow-bar: 0 -0.5px 0 rgba(0, 0, 0, 0.15);
+}
+[data-theme="dark"] {
+  --bg-grouped: #000000;
+  --surface: #1c1c1e;
+  --surface-2: #2c2c2e;
+  --surface-raised: #636366;
+  --separator: #38383a;
+  --label: #ffffff;
+  --label-secondary: #aeaeb2;
+  --label-tertiary: #8e8e93;
+  --accent: #0a84ff;
+  --accent-pressed: #409cff;
+  --accent-ink: #409cff;
+  --accent-soft: #0a2540;
+  --on-accent: #ffffff;
+  --pending: #ff9f0a;
+  --pending-soft: #3a2810;
+  --pending-ink: #ffb340;
+  --arrived: var(--accent);
+  --arrived-soft: var(--accent-soft);
+  --arrived-ink: #64b0ff;
+  --delivered: #30d158;
+  --delivered-soft: #0f2e19;
+  --delivered-ink: #4cd964;
+  --danger: #ff453a;
+  --danger-ink: #ff6961;
+  --scrim: rgba(0, 0, 0, 0.6);
+  --shadow-segment: none;
+  --shadow-bar: 0 -0.5px 0 rgba(255, 255, 255, 0.15);
+}
+:root {
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-full: 999px;
+  --layout-max: 430px;
+  --tap-min: 44px;
+  --button-h: 50px;
+  --thumb: 56px;
+  --photo-slot: 100px;
+  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, system-ui, sans-serif;
+}
+.large-title { font-family: var(--font-sans); font-size: 34px; line-height: 41px; font-weight: 700; letter-spacing: 0.4px; }
+.title-2 { font-family: var(--font-sans); font-size: 22px; line-height: 28px; font-weight: 700; letter-spacing: -0.3px; }
+.headline { font-family: var(--font-sans); font-size: 17px; line-height: 22px; font-weight: 600; letter-spacing: -0.4px; }
+.body { font-family: var(--font-sans); font-size: 17px; line-height: 22px; font-weight: 400; letter-spacing: -0.4px; }
+.subheadline { font-family: var(--font-sans); font-size: 15px; line-height: 20px; font-weight: 400; letter-spacing: -0.2px; }
+.footnote { font-family: var(--font-sans); font-size: 13px; line-height: 18px; font-weight: 400; letter-spacing: -0.1px; }
+.caption { font-family: var(--font-sans); font-size: 12px; line-height: 16px; font-weight: 600; }
