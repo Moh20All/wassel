@@ -1,11 +1,11 @@
 // All Firestore access. Photos live in shipments/{id}/photos as JPEG data URLs.
 // shortcut: photos stored in Firestore (no card for Storage yet); move to Firebase Storage if docs get slow or quota tight.
 import {
-  arrayUnion, collection, doc, getDoc, getDocs, onSnapshot, orderBy, query, serverTimestamp,
+  arrayRemove, arrayUnion, collection, doc, getDoc, getDocs, onSnapshot, orderBy, query, serverTimestamp,
   Timestamp, updateDoc, where, writeBatch, type DocumentSnapshot,
 } from 'firebase/firestore'
 import { auth, db } from './firebase'
-import { displayName, resizeImage } from './utils'
+import { displayName, formatDA, resizeImage } from './utils'
 
 export type Status = 'pending' | 'arrived' | 'delivered'
 export type Kind = 'papers' | 'parts'
@@ -13,7 +13,8 @@ export const DOCS = [
   'COC', 'CO', 'Environmental list', 'Blue card', 'Billing list', 'COC Trans', 'CI', 'Green book', 'Technical report',
 ]
 export interface HistoryEntry {
-  action: 'created' | 'edited' | 'paid' | Status
+  action: 'created' | 'edited' | 'paid' | 'payment' | 'doc' | Status
+  detail?: string // payment amount, or which document changed
   by: string // email
   name?: string // name at the time; missing on entries written before profiles existed
   at: Timestamp
@@ -45,8 +46,8 @@ export const myName = () => auth.currentUser!.displayName || displayName(auth.cu
 const shipments = collection(db, 'shipments')
 const photosOf = (id: string) => collection(db, 'shipments', id, 'photos')
 
-const entry = (action: HistoryEntry['action']): HistoryEntry =>
-  ({ action, by: auth.currentUser!.email!, name: myName(), at: Timestamp.now() })
+const entry = (action: HistoryEntry['action'], detail?: string): HistoryEntry =>
+  ({ action, ...(detail && { detail }), by: auth.currentUser!.email!, name: myName(), at: Timestamp.now() })
 
 const clean = (f: Fields): Fields => ({
   ...f,
@@ -119,6 +120,20 @@ export function setStatus(id: string, status: Status) {
 
 export function markPaid(s: Shipment) {
   return updateDoc(doc(shipments, s.id), { deposit: s.fullPrice, history: arrayUnion(entry('paid')) })
+}
+
+// shortcut: adds to the deposit this device last saw, so two people adding a payment in the same second can lose one; use a transaction if that ever happens.
+export function addPayment(s: Shipment, amount: number) {
+  const deposit = Math.min(s.fullPrice, s.deposit + amount)
+  return updateDoc(doc(shipments, s.id), { deposit, history: arrayUnion(entry('payment', formatDA(deposit - s.deposit))) })
+}
+
+export function toggleDoc(s: Shipment, name: string) {
+  const has = s.docs.includes(name)
+  return updateDoc(doc(shipments, s.id), {
+    docs: has ? arrayRemove(name) : arrayUnion(name),
+    history: arrayUnion(entry('doc', `${name} ${has ? 'removed' : 'received'}`)),
+  })
 }
 
 export async function deleteShipment(id: string) {

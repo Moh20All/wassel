@@ -1,7 +1,9 @@
 // New shipment (/new) and edit (/s/:id/edit). Parts and Papers share the form; the middle section switches.
 import { useEffect, useState, type FormEvent } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { createShipment, DOCS, getPhotos, getShipment, updateShipment, type Fields, type Photo } from '../shipments'
+import {
+  createShipment, DOCS, getPhotos, getShipment, updateShipment, watchShipments, type Fields, type Photo, type Shipment,
+} from '../shipments'
 import { ActionBar, Button, FormGroup, Icon, NavBar, PhotoPicker, SegmentedControl, TextField } from '../ui'
 import { formatDA, parseAmount, resizeImage } from '../utils'
 
@@ -32,6 +34,14 @@ export default function ShipmentForm() {
   const set = <K extends keyof Fields>(k: K) => (v: Fields[K]) => setFields(f => ({ ...f, [k]: v }))
   const amount = (k: 'fullPrice' | 'deposit') => (v: string) => set(k)(parseAmount(v))
   const toggleDoc = (d: string) => set('docs')(fields.docs.includes(d) ? fields.docs.filter(x => x !== d) : [...fields.docs, d])
+
+  // Returning clients: picking a known name fills the phone and address if they are still empty.
+  const [known, setKnown] = useState<Shipment[]>([])
+  useEffect(() => watchShipments(setKnown, console.error), [])
+  function setName(v: string) {
+    const c = known.find(k => k.clientName === v)
+    setFields(f => ({ ...f, clientName: v, clientPhone: f.clientPhone || c?.clientPhone || '', address: f.address || c?.address || '' }))
+  }
 
   useEffect(() => {
     if (!id) return
@@ -91,7 +101,10 @@ export default function ShipmentForm() {
           options={[{ value: 'parts', label: 'Parts' }, { value: 'papers', label: 'Papers' }]} />
 
         <FormGroup label="Client">
-          <TextField label="Client name" value={fields.clientName} onChange={set('clientName')} />
+          <TextField label="Client name" list="known-clients" value={fields.clientName} onChange={setName} />
+          <datalist id="known-clients">
+            {[...new Set(known.map(k => k.clientName))].map(n => <option key={n} value={n} />)}
+          </datalist>
           <TextField label="Phone number" type="tel" placeholder="0555 12 34 56" value={fields.clientPhone} onChange={set('clientPhone')} />
           <TextField label="Address" autoComplete="street-address" value={fields.address} onChange={set('address')} />
         </FormGroup>

@@ -1,6 +1,24 @@
 // Run: node src/utils.check.ts
 import assert from 'node:assert/strict'
-import { toWhatsAppUrl, timeAgo, dayLabel, displayName, formatDA, parseAmount } from './utils.ts'
+import {
+  toWhatsAppUrl, timeAgo, dayLabel, displayName, formatDA, parseAmount, clientMessage, matchesSearch, toCsv,
+} from './utils.ts'
+
+assert.equal(toWhatsAppUrl('0555 12 34 56', 'a b'), 'https://wa.me/213555123456?text=a%20b')
+
+const ship = { clientName: 'Ali', type: 'parts', status: 'arrived', fullPrice: 100000, deposit: 40000 }
+assert.match(clientMessage(ship), /^Bonjour Ali, votre pièce est bien arrivée\..*Reste à payer : 60\s000 DA\.$/)
+assert.match(clientMessage({ ...ship, deposit: 100000 }), /Tout est payé\.$/)
+assert.match(clientMessage({ ...ship, type: 'papers', status: 'pending', fullPrice: 0 }), /vos documents sont en route\. Nous vous préviendrons dès l'arrivée\.$/)
+assert.match(clientMessage({ ...ship, status: 'delivered', fullPrice: 0 }), /livrée\. Merci pour votre confiance\.$/)
+
+assert.ok(matchesSearch('', ['Ali'], ''))
+assert.ok(matchesSearch(' ali ', ['Ali Benali'], ''))
+assert.ok(matchesSearch('0555123', ['Ali'], '0555 12 34 56'))
+assert.ok(!matchesSearch('55', ['Ali'], '0555 12 34 56')) // too few digits to count as a phone search
+assert.ok(!matchesSearch('omar', ['Ali'], '0555 12 34 56'))
+
+assert.equal(toCsv([['a', 1], ['say "hi"', '+213']]), '﻿"a","1"\r\n"say ""hi""","\'+213"')
 
 assert.equal(toWhatsAppUrl('0555 12 34 56'), 'https://wa.me/213555123456')
 assert.equal(toWhatsAppUrl('+213 555 12 34 56'), 'https://wa.me/213555123456')

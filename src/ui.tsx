@@ -15,6 +15,8 @@ const PATHS = {
   check: 'M5 12.5l4.5 4.5L19 7',
   user: 'M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8z M4 20a8 8 0 0 1 16 0',
   dash: 'M7 12h10',
+  search: 'M11 18a7 7 0 1 0 0-14 7 7 0 0 0 0 14z M20 20l-4-4',
+  pin: 'M12 21s7-6.1 7-11a7 7 0 1 0-14 0c0 4.9 7 11 7 11z M12 12.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5z',
 }
 
 export function Icon({ name, size = 20, weight = 2 }: { name: keyof typeof PATHS; size?: number; weight?: number }) {
@@ -61,6 +63,7 @@ export function Button(p: {
 export function TextField(p: {
   label: string; value: string; onChange: (v: string) => void; type?: string; autoComplete?: string
   inputMode?: 'numeric' | 'tel' | 'email' | 'text'; placeholder?: string; multiline?: boolean; optional?: boolean
+  list?: string
 }) {
   const id = 'f-' + p.label.replace(/\W+/g, '-').toLowerCase()
   const change = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => p.onChange(e.target.value)
@@ -69,7 +72,7 @@ export function TextField(p: {
       <label className="ib-field-label" htmlFor={id}>{p.label}{p.optional && ' (optional)'}</label>
       {p.multiline
         ? <textarea id={id} rows={3} placeholder={p.placeholder} value={p.value} onChange={change} />
-        : <input id={id} type={p.type ?? 'text'} autoComplete={p.autoComplete} inputMode={p.inputMode} placeholder={p.placeholder}
+        : <input id={id} type={p.type ?? 'text'} autoComplete={p.autoComplete} inputMode={p.inputMode} list={p.list} placeholder={p.placeholder}
             value={p.value} onChange={change} />}
     </div>
   )
@@ -159,14 +162,23 @@ export function PhotoPicker(p: { photos: string[]; max?: number; onAdd: (files: 
   )
 }
 
-export function ContactActions({ phone }: { phone: string }) {
+export function Progress({ value, max, tone = 'accent' }: { value: number; max: number; tone?: 'accent' | 'delivered' }) {
+  const pct = max ? Math.min(100, Math.round((value / max) * 100)) : 0
+  return (
+    <div className="bar" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100}>
+      <span className={'bar-' + tone} style={{ width: pct + '%' }} />
+    </div>
+  )
+}
+
+export function ContactActions({ phone, message }: { phone: string; message?: string }) {
   const tel = 'tel:' + phone.replace(/\s/g, '')
   return (
     <div>
       <a className="ib-phone" href={tel}>{phone}</a>
       <div className="ib-contact">
         <a className="ib-contact-call" href={tel}><Icon name="phone" />Call</a>
-        <a className="ib-contact-wa" href={toWhatsAppUrl(phone)} target="_blank" rel="noopener"><Icon name="chat" />WhatsApp</a>
+        <a className="ib-contact-wa" href={toWhatsAppUrl(phone, message)} target="_blank" rel="noopener"><Icon name="chat" />WhatsApp</a>
       </div>
     </div>
   )

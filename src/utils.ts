@@ -14,11 +14,45 @@ export function parseAmount(s: string) {
   return Number(s.replace(/\D/g, '')) || 0
 }
 
-export function toWhatsAppUrl(phone: string) {
-  const d = phone.replace(/\D/g, '')
-  if (d.startsWith('00')) return 'https://wa.me/' + d.slice(2) // 00213... international prefix
-  if (d.startsWith('0')) return 'https://wa.me/213' + d.slice(1) // local Algerian number
-  return 'https://wa.me/' + d
+export function toWhatsAppUrl(phone: string, text = '') {
+  let d = phone.replace(/\D/g, '')
+  if (d.startsWith('00')) d = d.slice(2) // 00213... international prefix
+  else if (d.startsWith('0')) d = '213' + d.slice(1) // local Algerian number
+  return 'https://wa.me/' + d + (text ? '?text=' + encodeURIComponent(text) : '')
+}
+
+// Prefilled WhatsApp text for the client. It can still be edited in WhatsApp before sending.
+export function clientMessage(s: { clientName: string; type: string; status: string; fullPrice: number; deposit: number }) {
+  const parts = s.type === 'parts'
+  const left = Math.max(0, s.fullPrice - s.deposit)
+  const due = !s.fullPrice ? '' : left ? ` Reste à payer : ${formatDA(left)}.` : ' Tout est payé.'
+  const body =
+    s.status === 'pending'
+      ? (parts ? 'votre pièce est en route' : 'vos documents sont en route') + ". Nous vous préviendrons dès l'arrivée."
+    : s.status === 'arrived'
+      ? (parts ? 'votre pièce est bien arrivée' : 'vos documents sont bien arrivés') + '. Vous pouvez passer récupérer votre commande.' + due
+      : (parts ? 'votre pièce a bien été livrée' : 'vos documents ont bien été livrés') + '. Merci pour votre confiance.' + due
+  return `Bonjour ${s.clientName}, ${body}`
+}
+
+export function mapsUrl(address: string) {
+  return 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(address)
+}
+
+// List search: matches text in any field, or digits inside a phone number however it was typed.
+export function matchesSearch(query: string, fields: string[], phone: string) {
+  const q = query.trim().toLowerCase()
+  if (!q) return true
+  const digits = q.replace(/\D/g, '')
+  return fields.some(f => f.toLowerCase().includes(q)) ||
+    (digits.length >= 3 && phone.replace(/\D/g, '').includes(digits))
+}
+
+// Excel-friendly CSV: BOM for accents, quotes escaped, formula-looking text neutralised.
+export function toCsv(rows: (string | number)[][]) {
+  const cell = (v: string | number) =>
+    '"' + (typeof v === 'string' && /^[=+\-@]/.test(v) ? "'" + v : String(v)).replace(/"/g, '""') + '"'
+  return '﻿' + rows.map(r => r.map(cell).join(',')).join('\r\n')
 }
 
 // "Just now", "12 min ago", "3h ago", "Yesterday", "3 Nov"
